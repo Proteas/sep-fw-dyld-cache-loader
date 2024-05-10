@@ -30,7 +30,7 @@ from collections import namedtuple
 # Library Search Path
 sys.path.append("/usr/local/lib/python3.9/site-packages")
 
-# lief, Version: 0.12.3
+# lief, Version: 0.14.1
 import lief
 from lief import MachO
 ####################################################################################################
@@ -371,10 +371,10 @@ def LoadLiefObjToIDA(li, fileOffset, liefObj, baseAddr, binName, sepFwData, shar
         segm.align = section.alignment
         # print("name: %s, virt: 0x%X, size: 0x%X" % (section.name, section.virtual_address, section.size))
         segName = "%s:%s" % (binName, section.name)
-        sectTypeStr = str(section.type).split(".")[-1]
+        sectType = section.type
         sectSegName = section.segment_name
         
-        if sectTypeStr  == "ZEROFILL":
+        if sectType  == lief.MachO.SECTION_TYPES.ZEROFILL:
             segm.type = idaapi.SEG_BSS
 
         # if "__TEXT" in sectSegName:
@@ -506,7 +506,7 @@ def LoadLiefObjToIDA(li, fileOffset, liefObj, baseAddr, binName, sepFwData, shar
                 idc.op_plain_offset(itAddr, 0, 0x0)
         
         # fill zeros
-        if sectTypeStr  == "ZEROFILL":
+        if sectType  == lief.MachO.SECTION_TYPES.ZEROFILL:
             itAddr = eaBeginAddr
             while itAddr < eaEndAddr:
                 if section.alignment == 3:
@@ -609,7 +609,7 @@ def ParseSEPFirmware_IDA(li):
     output_file_index = 1
 
     kernelMachOData = sepFwData[kernel_text_offset:kernel_text_offset+kernel_size]
-    kernelFatBinary = MachO.parse(list(kernelMachOData), name)
+    kernelFatBinary = MachO.parse(list(kernelMachOData), config=MachO.ParserConfig.quick)
     if kernelFatBinary is not None:
         if kernelFatBinary.size != 1:
             RaiseException("[-] invalid macho: %s", name)
@@ -646,7 +646,7 @@ def ParseSEPFirmware_IDA(li):
     output_file_index += 1
 
     rootMachOData = sepFwData[root_text_offset:root_text_offset+root_size]
-    rootFatBinary = MachO.parse(list(rootMachOData), name)
+    rootFatBinary = MachO.parse(list(rootMachOData), config=MachO.ParserConfig.quick)
     if rootFatBinary.size != 1:
         RaiseException("[-] invalid macho: %s", name)
     rootBinary = rootFatBinary[0]
@@ -690,7 +690,7 @@ def ParseSEPFirmware_IDA(li):
 
         # Reconstruct the lib binary.
         libMachOData = sepFwData[text_offset:text_offset+text_size] + sepFwData[data_offset:data_offset+data_size]
-        libFatBinary = MachO.parse(list(libMachOData), name)
+        libFatBinary = MachO.parse(list(libMachOData), config=MachO.ParserConfig.quick)
         if libFatBinary.size != 1:
             print("[-] invalid lib macho: %s", name)
         else:
@@ -724,7 +724,7 @@ def ParseSEPFirmware_IDA(li):
 
         # Reconstruct the app binary.
         appMachOData = sepFwData[text_offset:text_offset+text_size] + sepFwData[data_offset:data_offset+data_size]
-        appFatBinary = MachO.parse(list(appMachOData), name)
+        appFatBinary = MachO.parse(list(appMachOData), config=MachO.ParserConfig.quick)
         if appFatBinary.size != 1:
             print("[-] invalid app macho: %s", name)
             continue
