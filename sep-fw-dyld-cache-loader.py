@@ -395,6 +395,7 @@ def LoadLiefObjToIDA(li, fileOffset, liefObj, baseAddr, binName, sepFwData, shar
                  (sectSegName == "__LEGION") or \
                  (sectSegName == "__DATA_CONST") or \
                  (sectSegName == "__BOOTARGS") or \
+                 (sectSegName == "__SEPOS") or \
                  (sectSegName == "STACK"):
                 if True:
                     dataOffset = sepFwData.find(section.content)
@@ -405,7 +406,7 @@ def LoadLiefObjToIDA(li, fileOffset, liefObj, baseAddr, binName, sepFwData, shar
                     # ida_bytes.put_bytes(eaBeginAddr, section.content.tobytes())
                     idaapi.mem2base(section.content.tobytes(), eaBeginAddr, -1)
             else:
-                RaiseException("[-] unkown segment: %s" % (sectSegName))
+                RaiseException("[-] unknown segment: %s" % (sectSegName))
 
         # format '__mod_init_func'
         if section.name == "__mod_init_func":
