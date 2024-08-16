@@ -100,7 +100,7 @@ def load_file(li, neflags, format):
     print("[+] neflags: 0x%X, format: %s" % (neflags, format))
 
     idaapi.set_processor_type("arm", idaapi.SETPROC_LOADER)
-    idaapi.get_inf_structure().lflags |= idaapi.LFLG_64BIT
+    idc.set_inf_attr(idc.INF_LFLAGS, idc.get_inf_attr(idc.INF_LFLAGS) | idc.LFLG_64BIT)
 
     bReload = (neflags & idaapi.NEF_RELOAD) != 0
     if bReload:
@@ -113,14 +113,14 @@ def load_file(li, neflags, format):
 ####################################################################################################
 
 def GetStructSize(name):
-    stID = idaapi.get_struc_id(name)
-    stSize = idaapi.get_struc_size(stID)
+    stID = idc.get_struc_id(name)
+    stSize = idc.get_struc_size(stID)
     return stSize
 ####################################################################################################
 
 def CreateStruct(ea, name):
-    stID = idaapi.get_struc_id(name)
-    stSize = idaapi.get_struc_size(stID)
+    stID = idc.get_struc_id(name)
+    stSize = idc.get_struc_size(stID)
 
     ida_bytes.del_items(ea, ida_bytes.DELIT_DELNAMES, stSize)
     ida_bytes.create_data(ea, ida_bytes.FF_STRUCT, stSize, stID)
@@ -129,19 +129,19 @@ def CreateStruct(ea, name):
 ####################################################################################################
 
 def GetMemberValueFromStruct(ea, stName, mmName):
-    stID = idaapi.get_struc_id(stName)
-    stRef = idaapi.get_struc(stID)
-    mmRef = idaapi.get_member_by_name(stRef, mmName)
-    
-    mmSize = mmRef.eoff - mmRef.soff
+    stID = idc.get_struc_id(stName)
+    stRef = idc.get_struc_name(stID)
+    mmOffset = idc.get_member_offset(stID, mmName)
+    mmSize = idc.get_member_size(stID, mmOffset)
+
     if mmSize == 8:
-        return ida_bytes.get_qword(ea + mmRef.soff)
+        return ida_bytes.get_qword(ea + mmOffset)
     elif mmSize == 4:
-        return ida_bytes.get_dword(ea + mmRef.soff)
+        return ida_bytes.get_dword(ea + mmOffset)
     elif mmSize == 2:
-        return ida_bytes.get_word(ea + mmRef.soff)
+        return ida_bytes.get_word(ea + mmOffset)
     elif mmSize == 1:
-        return ida_bytes.get_byte(ea + mmRef.soff)
+        return ida_bytes.get_byte(ea + mmOffset)
     else:
         print("[-] invalid size: %d" % mmSize)
     
